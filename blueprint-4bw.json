@@ -1,0 +1,37 @@
+{
+ "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+ "meta": {
+  "title": "Sito attività – 4BW",
+  "author": "Torelli",
+  "description": "Mockup generico per il modulo WordPress"
+ },
+ "landingPage": "/wp-admin/edit.php?post_type=page",
+ "preferredVersions": {
+  "php": "8.3",
+  "wp": "latest"
+ },
+ "features": {
+  "networking": true
+ },
+ "login": true,
+ "steps": [
+  {
+   "step": "setSiteLanguage",
+   "language": "it_IT"
+  },
+  {
+   "step": "installPlugin",
+   "pluginData": {
+    "resource": "wordpress.org/plugins",
+    "slug": "contact-form-7"
+   },
+   "options": {
+    "activate": true
+   }
+  },
+  {
+   "step": "runPHP",
+   "code": "<?php\nrequire_once '/wordpress/wp-load.php';\n\n// Pulizia contenuti di esempio (la bozza della privacy resta: serve nel modulo 4)\nwp_delete_post( 1, true );\nwp_delete_post( 2, true );\n\n// Permalink leggibili\nupdate_option( 'permalink_structure', '/%postname%/' );\nupdate_option( 'blogname', 'La mia attività' );\nupdate_option( 'blogdescription', '' );\n\n// Modulo contatti (Contact Form 7)\n$form_id = 0;\nif ( class_exists( 'WPCF7_ContactForm' ) ) {\n\t$forms = WPCF7_ContactForm::find();\n\tif ( empty( $forms ) ) {\n\t\t$cf = WPCF7_ContactForm::get_template( array( 'title' => 'Modulo di contatto' ) );\n\t\t$cf->save();\n\t\t$form_id = $cf->id();\n\t} else {\n\t\t$form_id = $forms[0]->id();\n\t}\n}\n\nfunction p( $t ) { return \"<!-- wp:paragraph -->\\n<p>$t</p>\\n<!-- /wp:paragraph -->\\n\\n\"; }\nfunction h( $t, $l = 2 ) { return \"<!-- wp:heading\" . ( $l == 2 ? '' : \" {\\\"level\\\":$l}\" ) . \" -->\\n<h$l class=\\\"wp-block-heading\\\">$t</h$l>\\n<!-- /wp:heading -->\\n\\n\"; }\nfunction ul( $items ) {\n\t$o = \"<!-- wp:list -->\\n<ul class=\\\"wp-block-list\\\">\";\n\tforeach ( $items as $i ) { $o .= \"<!-- wp:list-item -->\\n<li>$i</li>\\n<!-- /wp:list-item -->\"; }\n\treturn $o . \"</ul>\\n<!-- /wp:list -->\\n\\n\";\n}\nfunction col( $title, $text ) {\n\treturn \"<!-- wp:column -->\\n<div class=\\\"wp-block-column\\\">\" . h( $title, 3 ) . p( $text ) . \"</div>\\n<!-- /wp:column -->\\n\";\n}\n\n$pagine = array(\n\tarray( 'Home',\n\t\th( '[Nome della tua attività]', 1 ) .\n\t\tp( '[Una frase che dice cosa fai e per chi. Esempio: «Pane e focacce fatti a mano ogni mattina, nel centro di Imperia».]' ) .\n\t\th( 'Perché sceglierci' ) .\n\t\tul( array( '[Primo motivo]', '[Secondo motivo]', '[Terzo motivo]' ) ) .\n\t\th( 'Dove siamo e quando siamo aperti' ) .\n\t\tp( '[Indirizzo]' ) .\n\t\tp( '[Giorni e orari di apertura]' ) .\n\t\tp( '[Una frase che invita a scriverti dalla pagina Contatti]' ) ),\n\tarray( 'Chi siamo',\n\t\th( 'La nostra storia' ) .\n\t\tp( '[Come è nata l’attività, da quanto tempo esiste, chi l’ha fondata]' ) .\n\t\th( 'Chi lavora con noi' ) .\n\t\tp( '[Le persone dell’attività e il loro ruolo]' ) .\n\t\th( 'Cosa ci sta a cuore' ) .\n\t\tp( '[Due o tre valori dell’attività: qualità, prodotti del territorio, cortesia…]' ) ),\n\tarray( 'Prodotti e servizi',\n\t\tp( '[Una frase che presenta quello che offri]' ) .\n\t\t\"<!-- wp:columns -->\\n<div class=\\\"wp-block-columns\\\">\" .\n\t\tcol( '[Prodotto o servizio 1]', '[Descrizione in due righe e prezzo]' ) .\n\t\tcol( '[Prodotto o servizio 2]', '[Descrizione in due righe e prezzo]' ) .\n\t\tcol( '[Prodotto o servizio 3]', '[Descrizione in due righe e prezzo]' ) .\n\t\t\"</div>\\n<!-- /wp:columns -->\\n\\n\" ),\n\tarray( 'Galleria',\n\t\tp( '[Una frase che introduce le foto]' ) .\n\t\tp( '[Sostituisci questo paragrafo con un blocco Galleria con almeno 6 foto della tua attività]' ) ),\n\tarray( 'Contatti',\n\t\th( 'Dove siamo' ) .\n\t\tp( '[Indirizzo]' ) .\n\t\th( 'Orari' ) .\n\t\tp( '[Giorni e orari di apertura]' ) .\n\t\th( 'Telefono ed e-mail' ) .\n\t\tp( '[Telefono] – [E-mail]' ) .\n\t\th( 'Scrivici' ) .\n\t\t( $form_id ? \"<!-- wp:shortcode -->\\n[contact-form-7 id=\\\"$form_id\\\" title=\\\"Modulo di contatto\\\"]\\n<!-- /wp:shortcode -->\\n\" : p( '[Qui va il modulo di contatto]' ) ) ),\n);\n\n$ordine = 0;\n$home_id = 0;\nforeach ( $pagine as $pg ) {\n\t$id = wp_insert_post( array(\n\t\t'post_type'    => 'page',\n\t\t'post_status'  => 'publish',\n\t\t'post_title'   => $pg[0],\n\t\t'post_content' => $pg[1],\n\t\t'menu_order'   => $ordine++,\n\t) );\n\tif ( $pg[0] === 'Home' ) { $home_id = $id; }\n}\n\nupdate_option( 'show_on_front', 'page' );\nupdate_option( 'page_on_front', $home_id );\nflush_rewrite_rules();\n"
+  }
+ ]
+}
